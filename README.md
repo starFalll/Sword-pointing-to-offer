@@ -8,6 +8,8 @@ OJ网站为[牛客网](https://www.nowcoder.com/ta/coding-interviews)
 
 [剑指offer题解PDF版本下载地址](https://github.com/starFalll/Sword-pointing-to-offer/blob/master/%E5%89%91%E6%8C%87offer%E9%A2%98%E8%A7%A3.pdf)
 
+
+
 ## 1.二维数组中的查找
 
 ### 题目描述
@@ -628,17 +630,9 @@ public:
     {
         bool result=false;
         if((pRoot1!=NULL)&&(pRoot2!=NULL)){
-            if(pRoot1->val==pRoot2->val){
-                result=DoesTree1HaveTree2(pRoot1,pRoot2);
-                
-             }
-            if(!result){
-                result=HasSubtree(pRoot1->left,pRoot2);
-            }
-            if(!result){
-                result=HasSubtree(pRoot1->right,pRoot2);
-            }
-            
+                result=DoesTree1HaveTree2(pRoot1,pRoot2)||
+                    HasSubtree(pRoot1->left,pRoot2)||
+                    HasSubtree(pRoot1->right,pRoot2);
          }
         return result;
     }
@@ -889,38 +883,24 @@ public:
 
 ### 题解
 
+BST的后序序列的合法序列是，对于一个序列S，最后一个元素是x（也就是根），如果去掉最后一个元素的序列为T，那么T满足：T可以分成两段，前一段（左子树）小于x，后一段（右子树）大于x，且这两段（子树）都是合法的后序序列。可以使用递归定义。
+
 ```cpp
 class Solution {
+private:
+    bool judge(vector<int>& a,int l,int r){
+        if(l>=r) return true;
+        int i=r;
+        while(i>l&&a[i-1]>a[r])--i;
+        for(int j=i-1;j>=l;j--)
+            if(a[j]>a[r])
+                return false;
+        return judge(a,l,i-1)&&judge(a,i+1,r);
+    }
 public:
     bool VerifySquenceOfBST(vector<int> sequence) {
-        if(sequence.empty())
-            return false;
-        int l=0;
-        int root=sequence[sequence.size()-1];
-        for(;l<sequence.size()-1;l++){
-            if(sequence[l]>root)
-                break;
-        }
-        int r=l;
-        for(;r<sequence.size()-1;r++){
-            if(sequence[r]<root)
-                return false;
-        }
-        bool left=true;
-        if(l>0){
-            vector<int> leftBST;
-            for(int i=0;i<l;i++)
-                leftBST.push_back(sequence[i]);
-            left=VerifySquenceOfBST(leftBST);
-        }
-        bool right=true;
-        if(r<sequence.size()-1){
-            vector<int> rightBST;
-            for(int i=l;i<sequence.size()-1;i++)
-                rightBST.push_back(sequence[i]);
-            right=VerifySquenceOfBST(rightBST);
-        }
-        return (left&&right);
+        if(sequence.empty()) return false;
+        return judge(sequence,0,sequence.size()-1);
     }
 };
 ```
