@@ -2077,15 +2077,13 @@ public:
             flag=0;
             i++;
         }
-        else
-            flag=2;//前面没有符号，正数
         for(;i<str.size();i++){
             res*=10;
             int tmp=str[i]-'0';
             if(tmp<0||tmp>9)
                 return 0;
             res+=tmp;
-            if((flag==1&&res<INT_MIN)||res>INT_MAX)
+            if((flag==1&&-res<INT_MIN)||res>INT_MAX)
                 return 0;
         }
         if(flag==1)
@@ -2146,7 +2144,7 @@ public:
 ```cpp
 class Solution {
 public:
-    /*求B[i]=A[0]*A[1]*...*A[n-1]
+    /*求B[n]=A[0]*A[1]*...*A[n-1]
     动态规划：
     B[0]=1;
     for(int i=1;i<len;i++){
@@ -2178,7 +2176,7 @@ public:
 
 ### 题目描述
 
-请实现一个函数用来匹配包括'.'和'*'的正则表达式。模式中的字符'.'表示任意一个字符，而'*'表示它前面的字符可以出现任意次（包含0次）。 在本题中，匹配是指字符串的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab*ac*a"匹配，但是与"aa.a"和"ab*a"均不匹配
+请实现一个函数用来匹配包括'.'和'\*'的正则表达式。模式中的字符'.'表示任意一个字符，而'\*'表示它前面的字符可以出现任意次（包含0次）。 在本题中，匹配是指字符串的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab*ac*a"匹配，但是与"aa.a"和"ab*a"均不匹配
 
 ### 题解
 
@@ -2381,37 +2379,18 @@ class Solution {
 public:
     ListNode* deleteDuplication(ListNode* pHead)
     {
-        if(pHead==NULL)
-            return NULL;
-        ListNode* f=pHead;
-        ListNode* l=pHead;
-        ListNode* m=pHead;
-        while(l!=NULL){
-            if(l->next!=NULL&&l->next->val==f->val){
-                l=l->next;
-            }
-            else if(f!=l){
-                if(f==pHead){
-                    l=l->next;
-                    f=l;
-                    m=l;
-                    pHead=l;
-                    
-                }
-                else{
-                    m->next=l->next;
-                    l=l->next;
-                    f=l;
-                }
-            }
-            else{
-                m=f;
-                f=f->next;
-                l=l->next;
-                
-            }
+        if(pHead==nullptr||pHead->next==nullptr)
+            return pHead;
+        if(pHead->val==pHead->next->val){// 头结点是重复结点
+            ListNode* p=pHead->next->next;
+            while(p!=nullptr&&p->val==pHead->val)
+                p=p->next;
+            return deleteDuplication(p);
         }
-        return pHead;
+        else{
+            pHead->next=deleteDuplication(pHead->next);
+            return pHead;
+        }
     }
 };
 ```
@@ -2592,41 +2571,24 @@ struct TreeNode {
 class Solution {
 public:
         vector<vector<int> > Print(TreeNode* pRoot) {
-            vector<vector<int> > res;
-            if(pRoot==nullptr)
-                return res;
-            queue<TreeNode*> q1,q2;
-            q1.push(pRoot);
-            while(!q1.empty()||!q2.empty()){
-                vector<int> t;
-                while(!q1.empty()){
-                    TreeNode* p=q1.front();
-                    q1.pop();
-                    t.push_back(p->val);
-                    if(p->left!=nullptr)
-                        q2.push(p->left);
-                    if(p->right!=nullptr)
-                        q2.push(p->right);
+            vector<vector<int>> res;
+            if(pRoot==nullptr) return res;
+            queue<TreeNode*> q;
+            q.push(pRoot);
+            while(!q.empty()){
+                int l=q.size();
+                vector<int> tmp;
+                for(int i=0;i<l;i++){
+                    TreeNode* t=q.front();
+                    q.pop();
+                    tmp.push_back(t->val);
+                    if(t->left!=nullptr) q.push(t->left);
+                    if(t->right!=nullptr) q.push(t->right);
                 }
-                if(!t.empty()){
-                    res.push_back(t);
-                    t.clear();
-                }
-                while(!q2.empty()){
-                    TreeNode* p=q2.front();
-                    q2.pop();
-                    t.push_back(p->val);
-                    if(p->left!=nullptr)
-                        q1.push(p->left);
-                    if(p->right!=nullptr)
-                        q1.push(p->right);
-                }
-                if(!t.empty())
-                    res.push_back(t);
+                res.push_back(tmp);
             }
             return res;
         }
-    
 };
 ```
 
@@ -2734,9 +2696,7 @@ public:
         if(res==nullptr&&pRoot->right!=nullptr)
             res=GetRes(pRoot->right,k);
         return res;
-    }
-
-    
+    }  
 };
 ```
 
@@ -2751,48 +2711,29 @@ public:
 ```cpp
 class Solution {
 private:
-    vector<int> min;
-    vector<int> max;
+    priority_queue<int,vector<int>,less<int>>p;//最大堆
+    priority_queue<int,vector<int>,greater<int>>q;//最小堆
+    //最大堆的最大值小于最小堆的最小值
 public:
-    void Insert(int num)//最小堆的根节点大于最大堆的根节点
+    void Insert(int num)
     {
-         if((min.size()+max.size()&1)==0){/*如果总数目为偶数，分配给最小堆*/
-            if(max.size()>0&&num<max[0]){/*如果num小于最大堆的根节点，那么取出最大堆的最大结点插入最小堆*/
-                max.push_back(num);/*加入新数据 先在容器中加入，再调用push_heap()*/
-                push_heap(max.begin(),max.end(),less<int>());/*less<int>()为最大堆*/
-                num=max[0];
-                pop_heap(max.begin(),max.end(),less<int>());/*删除数据  要先调用pop_heap()，再在容器中删除*/
-                max.pop_back();
-            }
-           min.push_back(num);
-            push_heap(min.begin(),min.end(),greater<int>());
+        if(p.empty()||num<p.top())
+            p.push(num);
+        else q.push(num);
+        if(p.size()==q.size()+2){//均分数据
+            q.push(p.top());
+            p.pop();
         }
-        else{/*如果总数目为奇数，分配给最大堆*/
-            if(min.size()>0&&num>min[0]){
-                min.push_back(num);
-                push_heap(min.begin(),min.end(),greater<int>());
-                num=min[0];
-                pop_heap(min.begin(),min.end(),greater<int>());
-                min.pop_back();
-            }
-            max.push_back(num);
-            push_heap(max.begin(),max.end(),less<int>());
+        if(p.size()+1==q.size()){//保证p.size()==q.size()||p.size()==q.size()-1
+            p.push(q.top());
+            q.pop();
         }
     }
 
     double GetMedian()
-    { 
-        int size=min.size()+max.size();
-        if(size==0)
-            return 0;
-        if((size&1)==1)
-           return min[0];
-        else{
-            return (double)(min[0]+max[0])/2;
-        }
-        return 0;
+    { //数据是浮点数
+        return p.size()==q.size()?(p.top()+q.top())/2.0:p.top();
     }
-
 };
 ```
 
@@ -2830,7 +2771,6 @@ public:
             }
             else if(num[i]<num[front]&&i-front<size){
                 res.push_back(num[front]);
-                
             }
             else{
                 max=0;
@@ -2844,7 +2784,6 @@ public:
             }
         }
         return res;
-        
     }
 };
 ```
@@ -2884,8 +2823,7 @@ public:
     {
         if(str[length]=='\0')
             return true;
-        bool hasPath=false;
-        if(row>=0&&row<rows&&col>=0&&col<cols&&matrix[row*cols+col]==str[length]&&!visited[row*cols+col]){
+        bool hasPath=false;    if(row>=0&&row<rows&&col>=0&&col<cols&&matrix[row*cols+col]==str[length]&&!visited[row*cols+col]){
             ++length;
             visited[row*cols+col]=true;
             hasPath=hasPathCore(matrix,rows,cols,row+1,col,str,visited,length)
