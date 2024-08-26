@@ -1185,32 +1185,23 @@ public:
 ```cpp
 class Solution {
 public:
-    typedef multiset<int,greater<int>> inSet;
-    typedef multiset<int,greater<int>>::iterator setIter;
-    vector<int> GetLeastNumbers_Solution(vector<int> input, int k) {
+    vector<int> smallestK(vector<int>& arr, int k) {
+        if (k == 0) return {};
+        priority_queue<int> q;
+        for (auto num : arr) {
+            if (q.size() < k) {
+                q.push(num);
+            }
+            else if (q.top() > num) {
+                q.pop();
+                q.push(num);
+            }
+        }
         vector<int> res;
-        if(input.empty()||input.size()<k)
-            return res;
-        inSet setNum;
-        setNum.clear();
-        
-        for(int i=0;i<input.size();i++){
-            if(setNum.size()<k){
-                setNum.insert(input[i]);
-            }
-            else{
-                setIter Ibegin=setNum.begin();
-                if(input[i]<*Ibegin){
-                    setNum.erase(Ibegin);
-                    setNum.insert(input[i]);
-                }
-            }
+        while(!q.empty()) {
+            res.push_back(q.top());
+            q.pop();
         }
-        
-        for(setIter Ibegin=setNum.begin();Ibegin!=setNum.end();++Ibegin){
-            res.push_back(*Ibegin);
-        }
-        sort(res.begin(),res.end());
         return res;
     }
 };
